@@ -1,4 +1,7 @@
 import express from "express";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const app = express();
 
@@ -8,11 +11,13 @@ app.get("/", (req, res) => {
   res.send({ success: true, message: "Welcome to the Emoji Server" });
 });
 
-app.get("/users", (req, res) => {
+app.get("/users", async (req, res) => {
+  // get the actual users from the db
+  const users = await prisma.user.findMany();
   res.send({ success: true, users });
 });
 
-app.post("/users", (req, res) => {
+app.post("/users", async (req, res) => {
   const { name } = req.body;
 
   if (!name) {
@@ -22,9 +27,12 @@ app.post("/users", (req, res) => {
     });
   }
 
-  const user = { id: users.length + 1, name, count: 0 };
+  const user = await prisma.user.create({
+    data: {
+      name,
+    },
+  });
 
-  users.push(user);
   res.send({ success: true, user });
 });
 
@@ -39,24 +47,5 @@ app.use((error, req, res, next) => {
 const port = 3000;
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`app listening on port ${port}`);
 });
-
-// fake db
-let users = [
-  {
-    id: "0de64544-2f66-40bc-8649-aa5c618c5b38",
-    name: "Max",
-    count: 2,
-  },
-  {
-    id: "79f31fc8-8ca9-4744-a9ac-a68a89d71be2",
-    name: "Abdel",
-    count: 11,
-  },
-  {
-    id: "a5afe6f1-fca6-4752-856a-ca2fa9a54eb6",
-    name: "Adam",
-    count: 6,
-  },
-];
